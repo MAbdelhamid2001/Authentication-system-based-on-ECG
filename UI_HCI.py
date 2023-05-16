@@ -154,9 +154,9 @@ def exe_GUI():
 
 
         if actual[0] == get_sub(pred[0]):
-            res='Identity verified --> Accessed successfully'
+            res='Subject identified --> Access Allowed'
         else:
-            res='Identity not verified --> Access Denied'
+            res='Subject is unidentified --> Access Denied'
 
 
         Output.insert(tk.END,res)
