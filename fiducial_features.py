@@ -1,6 +1,12 @@
 import numpy as np
 from scipy.signal import butter, filtfilt, find_peaks
 
+# - We have extracted fiducial features related to QRS complex using Tompkin’s algorithm. The reason to select features related to only QRS complex is that QRS complex is considered to be fairly constant and doesn’t change with the change of heart rate as it reflects the depolarization of ventricular muscle
+
+# https://web.archive.org/web/20160911023941/http://ijarcsse.com/docs/papers/Volume_5/7_July2015/V5I6-0385.pdf
+
+
+
 def butter_bandpass(lowcut, highcut, fs, order=5):
     nyq = 0.5 * fs
     low = lowcut / nyq

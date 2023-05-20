@@ -1,11 +1,28 @@
 import numpy as np
-from scipy.signal import butter,filtfilt
 from statsmodels.graphics import tsaplots
+from scipy.signal import butter,filtfilt,savgol_filter
+from scipy.signal import find_peaks
+
 import statsmodels.api as sm
 import scipy.io
 import scipy
 import matplotlib.pyplot as plt
+from fiducial_features_11_points  import get_fiducial_features
 
+def ecg_isoline_drift_correction(ecg_signal, sampling_rate):
+
+    # Apply a high-pass filter to remove baseline wander and DC drift
+    b, a = butter(2, 0.5 / (sampling_rate / 2), 'highpass')
+    ecg_filtered = filtfilt(b, a, ecg_signal)
+
+    # Estimate the isoelectric line (baseline) using a moving average filter
+    window_size = int(sampling_rate * 0.2)  # 200 ms window size
+    baseline = savgol_filter(ecg_filtered, window_size, 1)
+
+    # Subtract the estimated baseline from the filtered ECG signal
+    ecg_corrected = ecg_filtered - baseline
+
+    return ecg_corrected
 
 def butter_bandbass_filter(Input_signal,low_cutoff,high_cutoff,sampling_rate,order=4):
     nyq=0.5*sampling_rate #nyquist sampling
@@ -18,7 +35,6 @@ def butter_bandbass_filter(Input_signal,low_cutoff,high_cutoff,sampling_rate,ord
     return filtered
 
 
-from scipy.signal import find_peaks
 def ecg_segmentation(ecg_signal, fs=1000, threshold=0.5):
     # Find R-peaks using a threshold-based approach
     peaks, _ = find_peaks(ecg_signal, height=threshold)
@@ -91,17 +107,28 @@ def preprocess_using_wavelet(filtered_signal):
     import pywt
     from pywt import wavedec ,waverec
 
-    wavelet = 'db4'
-    level = 4
+    wavelet = 'db8'
+    level = 5
+    # db8,level 5
+    # Daubechies sym7
     coeffs = pywt.wavedec(filtered_signal, wavelet, level=level)
     
     for i in range(1, level):
         coeffs[i] = np.zeros_like(coeffs[i])
 
-    res = pywt.waverec(coeffs, 'db4')
+    res = pywt.waverec(coeffs, wavelet)
     return res
 
-def preprocessing(signal,type_):
+
+
+def preprocessing_general(sig):
+    ecg_corrected = ecg_isoline_drift_correction(sig, sampling_rate=1000)
+
+    r_peaks, rr_intervals = ecg_segmentation(ecg_corrected, fs=1000, threshold=0.7)
+    segments = extract_ecg_segments(ecg_corrected, r_peaks, fs=1000, window_size=0.7)
+    return segments
+
+def get_features_general(signal,type_):
     
     """
     # type_=1:use wavelet
@@ -124,3 +151,9 @@ def preprocessing(signal,type_):
     
     return features
 
+def preprocessing_11points(sig):
+    
+    ecg_corrected = ecg_isoline_drift_correction(sig, sampling_rate=1000)
+    filtered_signal=butter_bandbass_filter(ecg_corrected,low_cutoff=2,high_cutoff=40,sampling_rate=1000,order=4)
+    segments = get_fiducial_features(filtered_signal)
+    return segments

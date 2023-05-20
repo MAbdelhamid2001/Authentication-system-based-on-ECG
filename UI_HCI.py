@@ -38,7 +38,7 @@ def exe_GUI():
 
         teditor.delete('1.0', tk.END)
         teditor.insert(tk.END,f_name)
-        # print(data)
+        print(to_test)
         
 
     #creating text editor
@@ -56,7 +56,7 @@ def exe_GUI():
 
     f2_var=tk.StringVar()
     f2=ttk.Combobox(top,width=18,height=5,textvariable=f2_var)
-    f2['values']=('Wavelet','Fiducial','AC/DCT')
+    f2['values']=('Wavelet','optimized_Fiducial','AC/DCT','pan_tompkins_11_point')
     f2.current(0)
     f2.place(x=200,y=100)
 
@@ -65,8 +65,11 @@ def exe_GUI():
             return 'wavelet'
         elif type_==2:
             return 'fiducial_features'
-        else:
+        elif type_  == 3:
             return 'AC/DCT'
+        elif type_ == 4:
+            return  'pan_tompkins_11_point'
+            
     def get_sub(idx):
         return f'sub_{idx+1}'
 
@@ -120,20 +123,39 @@ def exe_GUI():
 
         if type_=='Wavelet':
             type_=1
-        elif type_=='Fiducial':
+        elif type_=='optimized_Fiducial':
             type_=2
-        else:
+        elif type_=='AC/DCT':
             type_=3
+        elif type_=='pan_tompkins_11_point':
+            type_=4
+
 
 
         actual =re.findall('sub_\w',file)
         print("actual",actual[0])
-        print('test data',to_test)
 
-        test=preprocessing(to_test,type_)
-        test=np.array(test)
-        print('test shape',test.shape)
-        plot(to_test,test,type_)
+        if type_ !=4:
+
+            test=preprocessing_general(to_test)
+            test=test[2]
+            test=get_features_general(test,type_)
+            test=np.array(test)
+            print('test shape',test.shape)
+            plot(to_test,test,type_)
+
+        else:
+            test=preprocessing_11points(to_test)
+
+            loaded_scalar=pickle.load(open('scalar_sc.pkl','rb'))
+            test=loaded_scalar.transform(test)
+            test=np.array(test[2])
+            plot(to_test,test,type_)
+            print('test shape',test.shape)
+            print('test',test)
+
+
+
 #######################
 
         # ('Wavelet','Fiducial','AC/DCT')
@@ -142,8 +164,10 @@ def exe_GUI():
         # fiducial 
         elif type_==2:
             loaded_model=pickle.load(open('LDA_classifier_fiducial.pkl','rb'))
-        else:
+        elif type_ == 3:
             loaded_model=pickle.load(open('LDA_classifier_ACDCT.pkl','rb'))
+        else:#==4
+            loaded_model=pickle.load(open('LDA_classifier_11points.pkl','rb'))
 
 
         if type_ !=2:
@@ -152,7 +176,7 @@ def exe_GUI():
 
         pred=loaded_model.predict(test)
 
-
+        print('prediction',pred[0])
         if actual[0] == get_sub(pred[0]):
             res='Subject identified --> Access Allowed'
         else:
