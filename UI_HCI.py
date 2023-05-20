@@ -1,4 +1,3 @@
-
 import tkinter as tk
 from tkinter import messagebox,ttk,filedialog
 import numpy as np
@@ -79,8 +78,8 @@ def exe_GUI():
         f2_v=f2.get()
         print(f2_v)
         return f2_v
-    Button = tk.Button(top, text = "Submit", command = retrieve_f2,width=8,height=2)
-    Button.place(x=350,y=100)
+    # Button = tk.Button(top, text = "Submit", command = retrieve_f2,width=8,height=2)
+    # Button.place(x=350,y=100)
 
 
     ##Run
@@ -111,6 +110,22 @@ def exe_GUI():
         # placing the canvas on the Tkinter window
         canvas.get_tk_widget().place(x=50,y=300)
     
+###########################
+    lr=tk.Label(top,text="Person Name",width=12,height=2)
+    lr.place(x=90,y=5)
+    lr_entry=tk.Entry(top,width=21)
+    lr_entry.place(x=200,y=5)
+    lr_entry.focus_set()
+    lr_entry.insert(0,'sub_1')
+    def callback_lr():
+        lr_v=lr_entry.get()
+        print(lr_v)
+        return lr_v
+    
+    # B=tk.Button(top,text='insert',command=callback_lr,width=8,height=2)
+    # B.place(x=350,y=5)
+
+################################
 
     def callback_Run():
         msg=messagebox.showinfo('Running!','Wait Please ')
@@ -132,8 +147,9 @@ def exe_GUI():
 
 
 
-        actual =re.findall('sub_\w',file)
-        print("actual",actual[0])
+        # actual =re.findall('sub_\w',file)
+        person_name=callback_lr()
+        # print("actual",actual[0])
 
         if type_ !=4:
 
@@ -177,7 +193,9 @@ def exe_GUI():
         pred=loaded_model.predict(test)
 
         print('prediction',pred[0])
-        if actual[0] == get_sub(pred[0]):
+
+
+        if person_name== get_sub(pred[0]):
             res='Subject identified --> Access Allowed'
         else:
             res='Subject is unidentified --> Access Denied'
